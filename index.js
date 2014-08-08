@@ -16,8 +16,6 @@ function ros(name, deps) {
   ros.on('close', function() {
   });
 
-
-
   // Create ROS topic and msg
   var cmdVelTopic = new ROSLIB.Topic({
     ros : ros,
@@ -67,7 +65,6 @@ function ros(name, deps) {
   var navdata = new ROSLIB.Message({
      data : ''
   });
-
 
   // This is how you would register a listner to traffic from the browser
   // Listening to a Depth Hold Toggle from Cockpit and publishing a ROS message
