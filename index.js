@@ -92,6 +92,31 @@ function ros(name, deps) {
 
 
 
+  // TEMPERATURE TOPIC
+  var rosTemperature = new ROSLIB.Topic({
+     ros : ros,
+     name : '/openrov/temperature',
+     messageType : 'sensor_msgs/Temperature'
+  });
+
+  var temperature = new ROSLIB.Message({
+     temperature : 0.0,
+     variance : 0.0
+  });
+
+
+  // PRESSURE TOPIC
+  var rosPressure = new ROSLIB.Topic({
+     ros : ros,
+     name : '/openrov/pressure',
+     messageType : 'sensor_msgs/FluidPressure'
+  });
+
+  var pressure = new ROSLIB.Message({
+     fluid_pressure : 0.0,
+     variance : 0.0
+  });
+
   var listener = new ROSLIB.Topic({
      ros : ros,
      name : '/turtle1/cmd_vel',
@@ -143,6 +168,17 @@ function ros(name, deps) {
         //motortarget[2] = parseInt(mtargs[2]);
         //rosMotorTarget.publish(motortarget);
     }
+
+    if ('temp' in data) {
+        temperature.temperature = parseFloat(data.temp);
+        rosTemperature.publish(temperature);
+    }
+
+    if ('pres' in data) {
+        pressure.fluid_pressure = parseFloat(data.pres);
+        rosPressure.publish(pressure);
+    }
+
   });
 
 
