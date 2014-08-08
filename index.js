@@ -4,6 +4,7 @@ function ros(name, deps) {
 
   //var vm = require('vm');
 
+/*
   function include(path) {
         var vm = require('vm');
         var fs = require('fs');
@@ -15,25 +16,28 @@ function ros(name, deps) {
   include("/opt/openrov/cockpit/src/plugins/ros/roslibjs/src/util/shim/EventEmitter_fromweb.js");
   include("/opt/openrov/cockpit/src/plugins/ros/roslibjs/build/roslib.min.js");
  
+*/
+
 
   // Start a ROS session 
+  var ROSLIB = require("roslib");
   var ros = new ROSLIB.Ros({
         url : 'ws://192.168.254.2:9090'
   });
 
   ros.on('connection', function() {
-     var fbDiv = document.getElementById('feedback');
-     fbDiv.innerHTML += "<p>Connected to websocket server.</p>";
+     //var fbDiv = document.getElementById('feedback');
+     //fbDiv.innerHTML += "<p>Connected to websocket server.</p>";
   });
 
   ros.on('error', function(error) {
-    var fbDiv = document.getElementById('feedback');
-    fbDiv.innerHTML += "<p>Error connecting to websocket server.</p>";
+    //var fbDiv = document.getElementById('feedback');
+    //fbDiv.innerHTML += "<p>Error connecting to websocket server.</p>";
   });
 
   ros.on('close', function() {
-    var fbDiv = document.getElementById('feedback');
-    fbDiv.innerHTML += "<p>Connection to websocket server closed.</p>";
+    //var fbDiv = document.getElementById('feedback');
+    //fbDiv.innerHTML += "<p>Connection to websocket server closed.</p>";
   });
 
 
@@ -57,8 +61,11 @@ function ros(name, deps) {
     }
   });
 
+
   // To test if message gets published
-  // cmdVelTopic.publish(twist);
+  cmdVelTopic.publish(twist);
+
+
 
   // This is how you would register a listner to traffic from the browser
   // Listening to a Depth Hold Toggle from Cockpit and associating
