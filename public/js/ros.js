@@ -6,8 +6,11 @@
     ros = function ros(cockpit) {
         console.log("Loading ros plugin in the browser.");
 
-        // Instance variables
-        this.cockpit = cockpit;
+    // Instance variables
+    this.cockpit = cockpit;
+
+    $('body').append('<div id="ros"></div>');
+    //$('#navtoolbar').append('<div id="ros_icon"
 
     //example keyboard hook
     /*
