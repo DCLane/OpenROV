@@ -4,184 +4,137 @@ function ros(name, deps) {
   // Start a ROS session 
   var ROSLIB = require("roslib")
   var ros = new ROSLIB.Ros({
-        url : 'ws://192.168.254.2:9090'
+    url : 'ws://192.168.254.2:9090'
   });
 
   ros.on('connection', function() {
-     console.log('ROS connected to websocket');
+    console.log('ROS connected to websocket');
   });
 
   ros.on('error', function(error) {
-     console.log('ROS error connecting to websocket');
+    console.log('ROS error connecting to websocket');
   });
 
   ros.on('close', function() {
-     console.log('ROS closed websocket connection');
+    console.log('ROS closed websocket connection');
   });
 
-  // Create ROS topic and msg
-  var cmdVelTopic = new ROSLIB.Topic({
-    ros : ros,
-    name : '/turtle1/cmd_vel',
-    messageType : 'geometry_msgs/Twist'
-  });
 
-  var twist = new ROSLIB.Message({
-    linear : {
-        x : 0.0,
-        y : 0.0,
-        z : 0.0
-    },
-    angular : {
-        x : 0.0,
-        y : 0.0,
-        z : 0.0
-    }
-  });
-
+  // DEBUG TOPIC
   var rosDebug = new ROSLIB.Topic({
-     ros : ros,
-     name : '/openrov/debug',
-     messageType : 'std_msgs/String'
+    ros : ros,
+    name : '/openrov/debug',
+    messageType : 'std_msgs/String'
   });
 
   var debug = new ROSLIB.Message({
-     data : ''
+    data : ''
   });
-
 
   // RAW STATUS TOPIC
   var rosStatus = new ROSLIB.Topic({
-     ros : ros,
-     name : '/openrov/status',
-     messageType : 'openrov/rovstatus'
+    ros : ros,
+    name : '/openrov/status',
+    messageType : 'openrov/rovstatus'
   });
 
   var status = new ROSLIB.Message({
-     status : ''
+    status : ''
   });
-
 
   // MOTOR TARGET TOPIC 
   var rosMotorTarget = new ROSLIB.Topic({
-     ros : ros,
-     name : '/openrov/motortarget',
-     messageType : 'openrov/motortarget'
+    ros : ros,
+    name : '/openrov/motortarget',
+    messageType : 'openrov/motortarget'
   });
 /*
   var motortarget = new ROSLIB.Message({
-     motors : [0,0,0]
+    motors : [0,0,0]
   });
 */
 
   // NAVDATA TOPIC
   var rosNavData = new ROSLIB.Topic({
-     ros : ros,
-     name : '/openrov/navdata',
-     messageType : 'openrov/navdata'
+    ros : ros,
+    name : '/openrov/navdata',
+    messageType : 'openrov/navdata'
   });
 
   var navdata = new ROSLIB.Message({
-     roll : 0.0,
-     pitch : 0.0,
-     yaw : 0.0,
-     thrust : 0.0,
-     heading : 0.0,
-     depth : 0.0,
+    roll : 0.0,
+    pitch : 0.0,
+    yaw : 0.0,
+    thrust : 0.0,
+    heading : 0.0,
+    depth : 0.0,
   });
-
-
 
   // TEMPERATURE TOPIC
   var rosTemperature = new ROSLIB.Topic({
-     ros : ros,
-     name : '/openrov/temperature',
-     messageType : 'sensor_msgs/Temperature'
+    ros : ros,
+    name : '/openrov/temperature',
+    messageType : 'sensor_msgs/Temperature'
   });
 
   var temperature = new ROSLIB.Message({
-     temperature : 0.0,
-     variance : 0.0
+    temperature : 0.0,
+    variance : 0.0
   });
-
 
   // PRESSURE TOPIC
   var rosPressure = new ROSLIB.Topic({
-     ros : ros,
-     name : '/openrov/pressure',
-     messageType : 'sensor_msgs/FluidPressure'
+    ros : ros,
+    name : '/openrov/pressure',
+    messageType : 'sensor_msgs/FluidPressure'
   });
 
   var pressure = new ROSLIB.Message({
-     fluid_pressure : 0.0,
-     variance : 0.0
+    fluid_pressure : 0.0,
+    variance : 0.0
   });
 
-  var listener = new ROSLIB.Topic({
-     ros : ros,
-     name : '/turtle1/cmd_vel',
-     messageType : 'geometry_msgs/Twist'
-  });
-
-  listener.subscribe(function(message) {
-     console.log('ROS: I heard a ros msg.');     
-     //rosNavData.publish(navdata);
+  // MOTOR CONTROL TOPIC
+  var rosCmdVel = new ROSLIB.Topic({
+    ros : ros,
+    name : '/openrov/cmd_vel',
+    messageType : 'geometry_msgs/Twist'
   });
 
   console.log('ROS finished loading ros things.');
 
-  // This is how you would register a listner to traffic from 
-  // the browser. Currently listening to a Depth Hold Toggle 
-  // from Cockpit and publishing a ROS message
+  // Subscribe to motor control topic
+  rosCmdVel.subscribe(function(message) {
+    console.log('ROS recived velocity command');
 
-  deps.io.sockets.on('connection', function (socket) {
-    socket.on('holdDepth_toggle', function () {
-
-      debug.data = 'Hold depth toggled'
-      rosDebug.publish(debug);
-
-      //socket.emit('plugin.rovpilot.headingHold.toggle');
-
-      deps.rov.send('yaw(50)');
-      //deps.rov.emit('plugin.rovpilot.setYaw', .5);
-
-      deps.rov.send('msg(0)');
-      console.log('msg(0) sent');
-
-    });
+    deps.rov.send('yaw(50)'); 
   });
-  
 
-  //This is how you would register a listner to traffic from the ardunio
-  //or other parts of the node modules and forward it to the browser
-
-  //deps.globalEventLoop.on('serial-recieved', function (data) {
+  // Listen to Status
   deps.rov.on('status', function (data) {
     status.status = JSON.stringify(data);
     rosStatus.publish(status);
-    //deps.io.sockets.emit('messageIwantToForward', data);
 
     if ('mtarg' in data) {
-        var mtargs = data.mtarg.split(",");
-        //motortarget[0] = parseInt(mtargs[0]);
-        //motortarget[1] = parseInt(mtargs[1]);
-        //motortarget[2] = parseInt(mtargs[2]);
-        //rosMotorTarget.publish(motortarget);
+      var mtargs = data.mtarg.split(",");
+      //motortarget[0] = parseInt(mtargs[0]);
+      //motortarget[1] = parseInt(mtargs[1]);
+      //motortarget[2] = parseInt(mtargs[2]);
+      //rosMotorTarget.publish(motortarget);
     }
 
     if ('temp' in data) {
-        temperature.temperature = parseFloat(data.temp);
-        rosTemperature.publish(temperature);
+      temperature.temperature = parseFloat(data.temp);
+      rosTemperature.publish(temperature);
     }
 
     if ('pres' in data) {
-        pressure.fluid_pressure = parseFloat(data.pres);
-        rosPressure.publish(pressure);
+      pressure.fluid_pressure = parseFloat(data.pres);
+      rosPressure.publish(pressure);
     }
-
   });
 
-
+  // Listen to Navdata
   deps.rov.on('navdata', function (data) {
     if ('roll' in data) navdata.roll = parseFloat(data.roll);
     if ('pitch' in data) navdata.pitch = parseFloat(data.pitch);
@@ -192,7 +145,15 @@ function ros(name, deps) {
     rosNavData.publish(navdata);
   });
 
-
+  // This is how you would register a listner to traffic from 
+  // the browser. Currently listening to a Depth Hold Toggle 
+  // from Cockpit and publishing a ROS message
+  deps.io.sockets.on('connection', function (socket) {
+    socket.on('holdDepth_toggle', function () {
+      debug.data = 'Hold depth toggled'
+      rosDebug.publish(debug);
+    });
+  });
 
 };
 
