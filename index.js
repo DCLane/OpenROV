@@ -94,20 +94,40 @@ function ros(name, deps) {
     variance : 0.0
   });
 
-  // MOTOR CONTROL TOPIC
-  var rosCmdVel = new ROSLIB.Topic({
+  // RATE BASED MOTOR CONTROL TOPIC
+  var rosCmdRate = new ROSLIB.Topic({
     ros : ros,
-    name : '/openrov/cmd_vel',
+    name : '/openrov/cmd_rate',
     messageType : 'geometry_msgs/Twist'
+  });
+  
+    // POSITION BASED MOTOR CONTROL TOPIC
+  var rosCmdPose = new ROSLIB.Topic({
+    ros : ros,
+    name : '/openrov/cmd_pose',
+    messageType : 'geometry_msgs/Pose'
   });
 
   console.log('ROS finished loading ros things.');
 
-  // Subscribe to motor control topic
-  rosCmdVel.subscribe(function(message) {
-    console.log('ROS recived velocity command');
+  // Subscribe to rate motor control topic
+  rosCmdRate.subscribe(function(message) {
+    console.log('ROS recived rate command');
 
-    deps.rov.send('yaw(50)'); 
+    deps.rov.send('yaw('+message.angular.z*100+')');
+    deps.rov.send('pitch('+message.angular.x*100+')');
+    deps.rov.send('roll('+message.angular.y*100+')');
+    deps.rov.send('thrust('+message.linear.y*100+')');
+    deps.rov.send('lift('+message.linear.z*100+')');
+    deps.rov.send('strafe('+message.linear.x*100+')');
+  });
+  
+  // Subscribe to position motor control topic
+  rosCmdPose.subscribe(function(message) {
+    console.log('ROS recived pose command');
+    
+    //deps.rov.send('deptlon('+message.position.z+')');
+    //deps.rov.send('headlon('+message.position.z+')');
   });
 
   // Listen to Status
@@ -141,7 +161,8 @@ function ros(name, deps) {
     if ('yaw' in data) navdata.yaw = parseFloat(data.yaw);
     if ('thrust' in data) navdata.thrust = parseFloat(data.thrust);
     if ('hdgd' in data) navdata.heading = parseFloat(data.hdgd);
-    if ('deapth' in data) navdata.depth = parseFloat(data.deapth);
+    if ('depth' in data) navdata.depth = parseFloat(data.depth);
+    else if ('deapth' in data) navdata.depth = parseFloat(data.deapth);
     rosNavData.publish(navdata);
   });
 
